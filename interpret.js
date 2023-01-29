@@ -1,12 +1,6 @@
 let program = [
   { 
-    print: { '+': [3,5] } 
-  },
-  { 
-    print: { '*': [3,5] } 
-  },
-  { 
-    print: { '-': [3,5] } 
+    print: { '+': [3, {'*': [5, 6]}] } 
   },
 ]
 
@@ -38,7 +32,7 @@ exec = (stmt) => {
   } else if (typeof binaryOperators[key] === 'function') {
     let firstArgument = stmt[key][0];
     let secondArgument = stmt[key][1];
-    return binaryOperators[key](firstArgument, secondArgument)
+    return binaryOperators[key](exec(firstArgument), exec(secondArgument))
   }else{
     console.error('unknown instruction: '+key)
   }
