@@ -2,6 +2,12 @@ let program = [
   { 
     print: { '+': [3,5] } 
   },
+  { 
+    print: { '*': [3,5] } 
+  },
+  { 
+    print: { '-': [3,5] } 
+  },
 ]
 
 let builtins = {
@@ -10,6 +16,8 @@ let builtins = {
 
 let binaryOperators = {
   '+': (a,b) => { return a+b },
+  '-': (a,b) => { return a-b },
+  '*': (a,b) => { return a*b },
 }
 
 interpret = (program) => {
