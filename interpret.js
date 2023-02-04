@@ -1,13 +1,11 @@
 let program = [
   { def: { 'a': 10 } },
   { def: { 'b': 20 } },
-  { print: { '>': [{ val: 'b' }, { val: 'a' }] } },
-  { print: { '<': [{ val: 'a' }, { val: 'b' }] } },
-  { print: { '==': [{ val: 'a' }, { val: 'b' }] } },
-  //b > a OR a == b
-  { print: { '||': [{ '>': [{ val: 'b' }, { val: 'a' }] }, { '==': [{ val: 'a' }, { val: 'b' }] }] } },
-  //b > a AND a ==b 
-  { print: { '&&': [{ '>': [{ val: 'b' }, { val: 'a' }] }, { '==': [{ val: 'a' }, { val: 'b' }] }] } },
+  {
+    if: { '>': [{ val: 'a' }, { val: 'b' }] },
+    then: [{ print: 'a is greater than b' }],
+    else: [{ print: 'b is greater than a' }]
+  }
 ]
 
 let builtins = {
@@ -26,9 +24,11 @@ let binaryOperators = {
 }
 
 interpret = (program, state) => {
+  let returnValue;
   for (let stmt of program) {
-    exec(stmt, state)
+    returnValue = exec(stmt, state)
   }
+  return returnValue;
 };
 
 varDefinition = (defObj, state) => {
@@ -57,6 +57,17 @@ exec = (stmt, state) => {
   } else if (key === 'val') {
     let firstArgument = stmt[key]
     return varValue(firstArgument, state)
+  } else if (key === 'if') {
+    let condition = stmt[key]
+    if (exec(condition, state)) {
+      let thenStatements = stmt['then']
+      return interpret(thenStatements, state)
+    } else {
+      let elseStatements = stmt['else'];
+      if (typeof elseStatements !== 'undefined') {
+        return interpret(elseStatements, state)
+      }
+    }
   } else {
     console.error('unknown instruction: ' + key)
   }
