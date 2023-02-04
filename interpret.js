@@ -1,9 +1,13 @@
 let program = [
   { def: { 'a': 10 }},
   { def: { 'b': 20 }},
-  { 
-    print: { '+': [{ 'val': 'a' }, { 'val': 'b' }] }
-  },
+  { print: { '>': [{val: 'b'},{val:'a'}]}}, 
+  { print: { '<': [{val: 'a'},{val:'b'}]}},
+  { print: { '==': [{val: 'a'},{val:'b'}]}},
+  //b > a OR a == b
+  { print:  { '||': [{ '>': [{val: 'b'},{val:'a'}]},{ '==': [{val: 'a'},{val:'b'}]}] } },
+  //b > a AND a ==b 
+  { print:  { '&&': [{ '>': [{val: 'b'},{val:'a'}]},{ '==': [{val: 'a'},{val:'b'}]}] } },
 ]
 
 let builtins = {
@@ -14,6 +18,11 @@ let binaryOperators = {
   '+': (a,b) => { return a+b },
   '-': (a,b) => { return a-b },
   '*': (a,b) => { return a*b },
+  '>': (a,b) => { return a > b },
+  '<': (a,b) => { return a < b },
+  '==': (a,b) => { return a == b },
+  '||': (a,b) => { return a || b },
+  '&&': (a,b) => { return a && b },
 }
 
 interpret = (program,state) => {
