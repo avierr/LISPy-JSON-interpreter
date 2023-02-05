@@ -38,6 +38,19 @@ varDefinition = (defObj, state) => {
 
 varValue = (varKey, state) => { return state[varKey] }
 
+let ifStatement = (stmt, key, state) => {
+  let condition = stmt[key]
+  if (exec(condition, state)) {
+    let thenStatements = stmt['then']
+    return interpret(thenStatements, state)
+  } else {
+    let elseStatements = stmt['else'];
+    if (typeof elseStatements !== 'undefined') {
+      return interpret(elseStatements, state)
+    }
+  }
+}
+
 exec = (stmt, state) => {
 
   if (typeof stmt === 'number' || typeof stmt === 'string') {
@@ -58,16 +71,7 @@ exec = (stmt, state) => {
     let firstArgument = stmt[key]
     return varValue(firstArgument, state)
   } else if (key === 'if') {
-    let condition = stmt[key]
-    if (exec(condition, state)) {
-      let thenStatements = stmt['then']
-      return interpret(thenStatements, state)
-    } else {
-      let elseStatements = stmt['else'];
-      if (typeof elseStatements !== 'undefined') {
-        return interpret(elseStatements, state)
-      }
-    }
+    return ifStatement(stmt, key, state)
   } else {
     console.error('unknown instruction: ' + key)
   }
