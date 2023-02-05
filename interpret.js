@@ -1,10 +1,17 @@
 let program = [
-  { def: { 'a': 10 } },
-  { def: { 'b': 20 } },
   {
-    if: { '>': [{ val: 'a' }, { val: 'b' }] },
-    then: [{ print: 'a is greater than b' }],
-    else: [{ print: 'b is greater than a' }]
+    fn: {
+      'max': [['a', 'b'], [
+        {
+          if: { '>': [{ val: 'a' }, { val: 'b' }] },
+          then: [{ val: 'a' }],
+          else: [{ val: 'b' }]
+        }
+      ]]
+    }
+  },
+  {
+    print: { max: [3, 5] }
   }
 ]
 
@@ -33,10 +40,10 @@ interpret = (program, state) => {
 
 varDefinition = (defObj, state) => {
   let variable = Object.keys(defObj)[0];
-  state[variable] = exec(defObj[variable], state)
+  state.vars[variable] = exec(defObj[variable], state)
 }
 
-varValue = (varKey, state) => { return state[varKey] }
+varValue = (varKey, state) => { return state.vars[varKey] }
 
 let ifStatement = (stmt, key, state) => {
   let condition = stmt[key]
@@ -49,6 +56,25 @@ let ifStatement = (stmt, key, state) => {
       return interpret(elseStatements, state)
     }
   }
+}
+
+let fnStatement = (stmt, key, state) => {
+  let fnDefinition = stmt[key];
+  let fnName = Object.keys(fnDefinition)[0];
+  let fnArgs = fnDefinition[fnName][0];
+  let fnBody = fnDefinition[fnName][1];
+  state.vars[fnName] = { args: fnArgs, body: fnBody }
+}
+
+let fnExec = (stmt, key, state) => {
+  let fnName = key;
+  let fnArgs = stmt[fnName];
+  let fn = state.vars[fnName];
+  let newState = { vars: {}, parent: state };
+  for (let [index, argName] of fn.args.entries()) {
+    newState.vars[argName] = fnArgs[index];
+  }
+  return interpret(fn.body, newState);
 }
 
 exec = (stmt, state) => {
@@ -72,9 +98,15 @@ exec = (stmt, state) => {
     return varValue(firstArgument, state)
   } else if (key === 'if') {
     return ifStatement(stmt, key, state)
+  } else if (key === 'fn') {
+    return fnStatement(stmt, key, state)
   } else {
+    if (typeof state.vars[key] !== 'undefined') {
+      return fnExec(stmt, key, state)
+    }
     console.error('unknown instruction: ' + key)
   }
+
 }
 
-interpret(program, {})
+interpret(program, { vars: {}, parent: null })
