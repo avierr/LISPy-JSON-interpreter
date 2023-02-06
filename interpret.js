@@ -1,17 +1,22 @@
 let program = [
   {
     fn: {
-      'max': [['a', 'b'], [
-        {
-          if: { '>': [{ val: 'a' }, { val: 'b' }] },
-          then: [{ val: 'a' }],
-          else: [{ val: 'b' }]
+      'fibonacci': [['n'], [
+        { 
+          if: { '<=': [{ val: 'n' }, 1] },
+          then: [{ val: 'n' }],
+          else: [{
+            '+': [
+              { 'fibonacci': [{ '-': [{ val: 'n' }, 1] }] },
+              { 'fibonacci': [{ '-': [{ val: 'n' }, 2] }] },
+            ]
+          }]
         }
       ]]
     }
   },
   {
-    print: { max: [3, 5] }
+    print: { fibonacci: [6] }
   }
 ]
 
@@ -24,6 +29,8 @@ let binaryOperators = {
   '-': (a, b) => { return a - b },
   '*': (a, b) => { return a * b },
   '>': (a, b) => { return a > b },
+  '>=': (a, b) => { return a >= b },
+  '<=': (a, b) => { return a <= b },
   '<': (a, b) => { return a < b },
   '==': (a, b) => { return a == b },
   '||': (a, b) => { return a || b },
@@ -66,13 +73,27 @@ let fnStatement = (stmt, key, state) => {
   state.vars[fnName] = { args: fnArgs, body: fnBody }
 }
 
+let resolveVarName = (varName, currentState) => {
+  if (typeof currentState.vars[varName] !== 'undefined') {
+    return currentState.vars[varName];
+  } else {
+    if (currentState.parent != null) {
+      return resolveVarName(varName, currentState.parent);
+    } else {
+      throw new Error(`could not find: ${varName}`);
+    }
+  }
+
+}
+
 let fnExec = (stmt, key, state) => {
   let fnName = key;
   let fnArgs = stmt[fnName];
-  let fn = state.vars[fnName];
+  let fn = resolveVarName(fnName, state); //find in current or parent states
   let newState = { vars: {}, parent: state };
+  newState.vars[fnName] = fn; //attach current function defn to its own local state
   for (let [index, argName] of fn.args.entries()) {
-    newState.vars[argName] = fnArgs[index];
+    newState.vars[argName] = exec(fnArgs[index],state);
   }
   return interpret(fn.body, newState);
 }
